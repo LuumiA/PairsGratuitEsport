@@ -3,9 +3,10 @@ import { Radio } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { MatchWithTeams } from "@/lib/data/matches";
+import type { MatchListItem } from "@/lib/data/matches";
+import { tierLabel } from "@/lib/pandascore/mappers";
 
-function TeamBlock({ team }: { team: MatchWithTeams["team_a"] }) {
+function TeamBlock({ team }: { team: MatchListItem["team_a"] }) {
   return (
     <div className="flex flex-1 flex-col items-center gap-2 text-center">
       <Avatar className="size-12">
@@ -17,7 +18,7 @@ function TeamBlock({ team }: { team: MatchWithTeams["team_a"] }) {
   );
 }
 
-export function MatchCard({ match }: { match: MatchWithTeams }) {
+export function MatchCard({ match }: { match: MatchListItem }) {
   const isLive = match.status === "running";
   const date = match.scheduled_at
     ? new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(
@@ -29,7 +30,7 @@ export function MatchCard({ match }: { match: MatchWithTeams }) {
     <Link href={`/matches/${match.id}`}>
       <Card className="h-full border-white/10 transition-colors hover:border-neon-violet/40 hover:bg-surface-2">
         <CardContent className="flex flex-col gap-4 pt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             {isLive ? (
               <Badge className="gap-1 border-neon-loss/40 bg-neon-loss/10 text-neon-loss">
                 <Radio className="size-3 animate-pulse" /> EN DIRECT
@@ -37,7 +38,21 @@ export function MatchCard({ match }: { match: MatchWithTeams }) {
             ) : (
               <span className="text-xs text-muted-foreground">{date}</span>
             )}
+            {match.tier && (
+              <Badge variant="outline" className="shrink-0 border-white/10 text-[10px] text-muted-foreground">
+                {tierLabel(match.tier)}
+              </Badge>
+            )}
           </div>
+
+          {match.league_name && (
+            <p className="-mt-2 truncate text-center text-[11px] text-muted-foreground">
+              {match.league_name}
+              {match.tournament_name && match.tournament_name !== match.league_name
+                ? ` · ${match.tournament_name}`
+                : ""}
+            </p>
+          )}
 
           <div className="flex items-center gap-2">
             <TeamBlock team={match.team_a} />

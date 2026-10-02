@@ -5,6 +5,7 @@ import { gameNameById } from "@/lib/data/games";
 import { requireProfile } from "@/lib/data/profile";
 import { createClient } from "@/lib/supabase/server";
 import { extractStreams } from "@/lib/pandascore/streams";
+import { extractTournamentInfo, tierLabel } from "@/lib/pandascore/mappers";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,11 +49,23 @@ export default async function MatchDetailPage({
         : null;
 
   const streams = extractStreams(match.raw ?? null);
+  const { leagueName, tournamentName, tier } = extractTournamentInfo(match.raw ?? null);
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
-      <div>
+      <div className="flex flex-wrap items-center gap-2">
         <Badge variant="secondary">{gameNameById(match.game_id)}</Badge>
+        {tier && (
+          <Badge variant="outline" className="border-white/10 text-muted-foreground">
+            {tierLabel(tier)}
+          </Badge>
+        )}
+        {leagueName && (
+          <span className="text-xs text-muted-foreground">
+            {leagueName}
+            {tournamentName && tournamentName !== leagueName ? ` · ${tournamentName}` : ""}
+          </span>
+        )}
       </div>
 
       <Card className="border-white/10">

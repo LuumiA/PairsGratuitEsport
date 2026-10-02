@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchStatus } from "@/lib/types/db";
+import { extractTournamentInfo } from "@/lib/pandascore/mappers";
 
 export interface MatchTeam {
   id: number;
@@ -23,6 +24,12 @@ export interface MatchWithTeams {
   team_b: MatchTeam;
 }
 
+export interface MatchListItem extends Omit<MatchWithTeams, "raw"> {
+  league_name: string | null;
+  tournament_name: string | null;
+  tier: string | null;
+}
+
 async function attachTeams<T extends { team_a_id: number; team_b_id: number }>(
   supabase: Awaited<ReturnType<typeof createClient>>,
   matches: T[]
@@ -41,18 +48,27 @@ async function attachTeams<T extends { team_a_id: number; team_b_id: number }>(
     .map((m) => ({ ...m, team_a: teamById.get(m.team_a_id)!, team_b: teamById.get(m.team_b_id)! }));
 }
 
-export async function getUpcomingAndLiveMatches(): Promise<MatchWithTeams[]> {
+export async function getUpcomingAndLiveMatches(): Promise<MatchListItem[]> {
   const supabase = await createClient();
   const { data: matches } = await supabase
     .from("matches")
     .select(
-      "id, game_id, status, scheduled_at, odds_a, odds_b, betting_locked_at, winner_team_id, team_a_id, team_b_id"
+      "id, game_id, status, scheduled_at, odds_a, odds_b, betting_locked_at, winner_team_id, team_a_id, team_b_id, raw"
     )
     .in("status", ["upcoming", "running"])
     .order("scheduled_at", { ascending: true })
     .limit(150);
 
-  return attachTeams(supabase, matches ?? []);
+  const withTeams = await attachTeams(supabase, matches ?? []);
+  return withTeams.map(({ raw, ...rest }) => {
+    const info = extractTournamentInfo(raw as Record<string, unknown> | null | undefined);
+    return {
+      ...rest,
+      league_name: info.leagueName,
+      tournament_name: info.tournamentName,
+      tier: info.tier,
+    };
+  });
 }
 
 export async function getMatchById(id: number): Promise<MatchWithTeams | null> {
