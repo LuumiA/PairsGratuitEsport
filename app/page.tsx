@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { SessionRedirect } from "@/components/auth/session-redirect";
 
 const GAMES = ["Valorant", "CS2", "League of Legends"];
 
@@ -39,6 +40,7 @@ export default async function Home() {
 
   return (
     <div className="flex flex-1 flex-col">
+      <SessionRedirect />
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-6">
         <span className="text-lg font-bold tracking-tight text-gradient-neon">
           PairsGratuitEsport
