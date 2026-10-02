@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Coins, Home, Swords, Brain, Users, Trophy, Shield } from "lucide-react";
+import { Coins, Home, Swords, Brain, Users, Trophy, Shield, History } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -81,6 +81,9 @@ export function AppNav({ profile }: { profile: NavProfile }) {
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem render={<Link href={`/profile/${profile.username}`} />}>
                 Mon profil
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link href="/bets" />} className="gap-2">
+                <History className="size-4" /> Mes paris
               </DropdownMenuItem>
               <DropdownMenuItem render={<Link href="/settings" />}>Paramètres</DropdownMenuItem>
               {profile.is_admin && (

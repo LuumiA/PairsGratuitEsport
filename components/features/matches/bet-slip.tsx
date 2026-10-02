@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,22 +29,19 @@ export function BetSlip({
   const router = useRouter();
   const [selected, setSelected] = useState<TeamOption | null>(null);
   const [stake, setStake] = useState(Math.min(50, pointsBalance));
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
   const potentialPayout = selected ? Math.round(stake * selected.odds) : null;
 
   function submit() {
     if (!selected) {
-      setError("Choisis une équipe.");
+      toast.error("Choisis une équipe.");
       return;
     }
     if (stake <= 0 || stake > pointsBalance) {
-      setError("Mise invalide.");
+      toast.error("Mise invalide.");
       return;
     }
-    setError(null);
 
     startTransition(async () => {
       const supabase = createClient();
@@ -55,11 +53,11 @@ export function BetSlip({
       });
 
       if (rpcError) {
-        setError(rpcError.message);
+        toast.error(rpcError.message);
         return;
       }
 
-      setSuccess(`Pari placé sur ${selected.name} : ${stake} points misés.`);
+      toast.success(`Pari placé sur ${selected.name} : ${stake} points misés.`);
       router.refresh();
     });
   }
@@ -71,10 +69,7 @@ export function BetSlip({
           <button
             key={team.id}
             type="button"
-            onClick={() => {
-              setSelected(team);
-              setSuccess(null);
-            }}
+            onClick={() => setSelected(team)}
             className={cn(
               "rounded-lg border px-3 py-3 text-left transition-colors",
               selected?.id === team.id
@@ -111,9 +106,6 @@ export function BetSlip({
           Gain potentiel : <span className="font-semibold text-neon-win">{potentialPayout}</span> points
         </p>
       )}
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {success && <p className="text-sm text-neon-win">{success}</p>}
 
       <Button onClick={submit} disabled={pending || !selected} className="w-full glow-primary">
         {pending ? "Envoi..." : "Placer le pari"}

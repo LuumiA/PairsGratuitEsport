@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
 import { joinGroup, type GroupFormState } from "@/lib/actions/groups";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,10 @@ import { Label } from "@/components/ui/label";
 
 export function JoinGroupForm({ defaultCode }: { defaultCode?: string }) {
   const [state, formAction, pending] = useActionState<GroupFormState, FormData>(joinGroup, null);
+
+  useEffect(() => {
+    if (state?.error) toast.error(state.error);
+  }, [state]);
 
   return (
     <form action={formAction} className="space-y-2">
@@ -20,7 +25,6 @@ export function JoinGroupForm({ defaultCode }: { defaultCode?: string }) {
           {pending ? "..." : "Rejoindre"}
         </Button>
       </div>
-      {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
     </form>
   );
 }

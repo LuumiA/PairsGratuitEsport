@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
 import { createGroup, type GroupFormState } from "@/lib/actions/groups";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,10 @@ export function CreateGroupForm() {
     null
   );
 
+  useEffect(() => {
+    if (state?.error) toast.error(state.error);
+  }, [state]);
+
   return (
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
@@ -39,7 +44,6 @@ export function CreateGroupForm() {
           <Input id="tournament_end" name="tournament_end" type="datetime-local" required />
         </div>
       </div>
-      {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
       <Button type="submit" disabled={pending} className="glow-primary">
         {pending ? "Création..." : "Créer le groupe"}
       </Button>

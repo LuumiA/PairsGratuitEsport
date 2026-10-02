@@ -3,9 +3,10 @@ import { Lock, Radio } from "lucide-react";
 import { getMatchById } from "@/lib/data/matches";
 import { gameNameById } from "@/lib/data/games";
 import { requireProfile } from "@/lib/data/profile";
+import { getTeamRecentForm } from "@/lib/data/teams";
 import { createClient } from "@/lib/supabase/server";
 import { extractStreams } from "@/lib/pandascore/streams";
-import { extractTournamentInfo, tierLabel } from "@/lib/pandascore/mappers";
+import { extractTournamentInfo, extractSeriesScore, tierLabel } from "@/lib/pandascore/mappers";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,6 +51,11 @@ export default async function MatchDetailPage({
 
   const streams = extractStreams(match.raw ?? null);
   const { leagueName, tournamentName, tier } = extractTournamentInfo(match.raw ?? null);
+  const seriesScore = extractSeriesScore(match.raw ?? null, match.team_a.id, match.team_b.id);
+  const [formA, formB] = await Promise.all([
+    getTeamRecentForm(match.team_a.id),
+    getTeamRecentForm(match.team_b.id),
+  ]);
 
   return (
     <div className="mx-auto max-w-xl space-y-6">
@@ -73,13 +79,22 @@ export default async function MatchDetailPage({
           {match.status === "running" ? (
             <Badge className="gap-1 border-neon-loss/40 bg-neon-loss/10 text-neon-loss">
               <Radio className="size-3 animate-pulse" /> EN DIRECT
+              {seriesScore && (
+                <span className="font-bold">
+                  {" "}
+                  {seriesScore.teamA}-{seriesScore.teamB}
+                </span>
+              )}
             </Badge>
           ) : (
             date && <span className="text-sm text-muted-foreground">{date}</span>
           )}
 
           <div className="flex w-full items-center justify-around">
-            {[match.team_a, match.team_b].map((team) => (
+            {[
+              { team: match.team_a, form: formA },
+              { team: match.team_b, form: formB },
+            ].map(({ team, form }) => (
               <div key={team.id} className="flex flex-col items-center gap-2">
                 <Avatar className="size-16">
                   <AvatarImage src={team.logo_url ?? undefined} alt={team.name} />
@@ -88,6 +103,23 @@ export default async function MatchDetailPage({
                   </AvatarFallback>
                 </Avatar>
                 <span className="font-semibold">{team.name}</span>
+                <span className="text-xs text-muted-foreground">{Math.round(team.rating)} Elo</span>
+                {form.length > 0 && (
+                  <div className="flex gap-1">
+                    {form.map((result, i) => (
+                      <span
+                        key={i}
+                        className={
+                          result === "W"
+                            ? "flex size-4 items-center justify-center rounded-sm bg-neon-win/20 text-[9px] font-bold text-neon-win"
+                            : "flex size-4 items-center justify-center rounded-sm bg-neon-loss/20 text-[9px] font-bold text-neon-loss"
+                        }
+                      >
+                        {result}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {winnerName === team.name && (
                   <Badge className="border-neon-win/40 bg-neon-win/10 text-neon-win">Vainqueur</Badge>
                 )}

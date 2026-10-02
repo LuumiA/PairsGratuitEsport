@@ -34,6 +34,12 @@ export function MatchCard({ match }: { match: MatchListItem }) {
             {isLive ? (
               <Badge className="gap-1 border-neon-loss/40 bg-neon-loss/10 text-neon-loss">
                 <Radio className="size-3 animate-pulse" /> EN DIRECT
+                {match.series_score && (
+                  <span className="font-bold">
+                    {" "}
+                    {match.series_score.teamA}-{match.series_score.teamB}
+                  </span>
+                )}
               </Badge>
             ) : (
               <span className="text-xs text-muted-foreground">{date}</span>

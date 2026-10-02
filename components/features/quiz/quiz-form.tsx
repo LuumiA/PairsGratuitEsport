@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,14 +20,12 @@ export function QuizForm({
 }) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ score: number; points_awarded: number } | null>(null);
   const [pending, startTransition] = useTransition();
 
   const allAnswered = questions.every((q) => answers[q.id] !== undefined);
 
   function submit() {
-    setError(null);
     startTransition(async () => {
       const supabase = createClient();
       const { data, error: rpcError } = await supabase.rpc("submit_quiz", {
@@ -35,11 +34,12 @@ export function QuizForm({
       });
 
       if (rpcError) {
-        setError(rpcError.message);
+        toast.error(rpcError.message);
         return;
       }
 
       setResult({ score: data!.score, points_awarded: data!.points_awarded });
+      toast.success(`+${data!.points_awarded} points crédités !`);
       router.refresh();
     });
   }
@@ -89,8 +89,6 @@ export function QuizForm({
           </CardContent>
         </Card>
       ))}
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button onClick={submit} disabled={!allAnswered || pending} className="w-full glow-primary">
         {pending ? "Envoi..." : "Valider mes réponses"}

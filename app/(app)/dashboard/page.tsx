@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Swords, Brain, Users, Trophy } from "lucide-react";
+import { Swords, Brain, Users, Trophy, History } from "lucide-react";
 import { requireProfile } from "@/lib/data/profile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClaimBonusButton } from "@/components/features/dashboard/claim-bonus-button";
@@ -28,6 +28,12 @@ const SHORTCUTS = [
     icon: Trophy,
     title: "Classement",
     description: "Compare-toi à tous les joueurs du serveur.",
+  },
+  {
+    href: "/bets",
+    icon: History,
+    title: "Mes paris",
+    description: "Retrouve l'historique de tous tes paris passés.",
   },
 ];
 

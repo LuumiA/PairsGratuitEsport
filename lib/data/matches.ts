@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchStatus } from "@/lib/types/db";
-import { extractTournamentInfo } from "@/lib/pandascore/mappers";
+import { extractTournamentInfo, extractSeriesScore, type SeriesScore } from "@/lib/pandascore/mappers";
 
 export interface MatchTeam {
   id: number;
@@ -28,6 +28,7 @@ export interface MatchListItem extends Omit<MatchWithTeams, "raw"> {
   league_name: string | null;
   tournament_name: string | null;
   tier: string | null;
+  series_score: SeriesScore | null;
 }
 
 async function attachTeams<T extends { team_a_id: number; team_b_id: number }>(
@@ -61,12 +62,14 @@ export async function getUpcomingAndLiveMatches(): Promise<MatchListItem[]> {
 
   const withTeams = await attachTeams(supabase, matches ?? []);
   return withTeams.map(({ raw, ...rest }) => {
-    const info = extractTournamentInfo(raw as Record<string, unknown> | null | undefined);
+    const typedRaw = raw as Record<string, unknown> | null | undefined;
+    const info = extractTournamentInfo(typedRaw);
     return {
       ...rest,
       league_name: info.leagueName,
       tournament_name: info.tournamentName,
       tier: info.tier,
+      series_score: extractSeriesScore(typedRaw, rest.team_a.id, rest.team_b.id),
     };
   });
 }
